@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import * as Yup from 'yup'
 
 // 👇 Here are the validation errors you will use with Yup.
 const validationErrors = {
@@ -17,6 +18,17 @@ const toppings = [
   { topping_id: '4', text: 'Mushrooms' },
   { topping_id: '5', text: 'Ham' },
 ]
+
+// Validation schema using Yup
+
+const validationSchema = Yup.object({
+  fullName: Yup.string()
+  .min(3, validationErrors.fullNameTooShot)
+  .max(20, validationErrors.fullNameTooLong)
+  .required('Full name is required'),
+  size: Yup.string().oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect).required('Size is required')
+  toppings: Yup.array().of(Yup.string()),
+});
 
 export default function Form() {
   return (
