@@ -42,6 +42,8 @@ export default function Form() {
     toppings: '',
   });
 
+  const [formSubmitted, setFormSubmitted] = useState(false)
+
   const handleInputChange = (e) => {
     const {name, value, type, checked} = e.target;
     const inputValues = type === 'checkbox' ? checked : value;
@@ -74,6 +76,12 @@ setFormValues({
     validationSchema.validate(formValues, {abortEarly: false})
     .then(() => {
       console.log('Form submitted with values:', formValues);
+      setFormSubmitted(true);
+      setFormValues({
+        fullName: '',
+        size: '',
+        toppings: [],
+      })
     })
 .catch((err) => {
   const newErrors = {};
@@ -87,14 +95,16 @@ setFormValues({
   return (
     <form onSubmit={handleSubmit}>
       <h2>Order Your Pizza</h2>
-      {true && <div className='success'>Thank you for your order!</div>}
-      {true && <div className='failure'>Something went wrong</div>}
+      {formSubmitted && <div className='success'>Thank you for your order!</div>}
+      {!formSubmitted && <div className='failure'>Something went wrong</div>}
 
       <div className="input-group">
         <div>
           <label htmlFor="fullName">Full Name</label><br />
           <input name="fullName" placeholder="Type full name" id="fullName" type="text" onChange={handleInputChange} value={formValues.fullName}/>
         {formErrors.fullName && <div className='error'>{formErrors.fullName}</div>}
+        {formErrors.size && <div className='error'>{formErrors.size}</div>}
+        {formErrors.toppings && <div className='error'>{formErrors.toppings}</div>}
         </div>
       </div>
 
@@ -128,5 +138,5 @@ setFormValues({
       </div>
       <input type="submit" />
     </form>
-  )
+  );
 }
