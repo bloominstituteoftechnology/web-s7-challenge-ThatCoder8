@@ -81,7 +81,7 @@ setFormValues({
         fullName: '',
         size: '',
         toppings: [],
-      })
+      });
     })
 .catch((err) => {
   const newErrors = {};
@@ -95,7 +95,7 @@ setFormValues({
   return (
     <form onSubmit={handleSubmit}>
       <h2>Order Your Pizza</h2>
-      {formSubmitted && <div className='success'>Thank you for your order!</div>}
+      {formSubmitted && Object.keys(formErrors).length === 0 && ( <div className='success'>Thank you for your order!</div>)}
       {!formSubmitted && <div className='failure'>Something went wrong</div>}
 
       <div className="input-group">
@@ -103,8 +103,6 @@ setFormValues({
           <label htmlFor="fullName">Full Name</label><br />
           <input name="fullName" placeholder="Type full name" id="fullName" type="text" onChange={handleInputChange} value={formValues.fullName}/>
         {formErrors.fullName && <div className='error'>{formErrors.fullName}</div>}
-        {formErrors.size && <div className='error'>{formErrors.size}</div>}
-        {formErrors.toppings && <div className='error'>{formErrors.toppings}</div>}
         </div>
       </div>
 
@@ -136,7 +134,7 @@ setFormValues({
         ))}
         {formErrors.toppings && <div className='error'>{formErrors.toppings}</div>}
       </div>
-      <input type="submit" />
+      <input type="submit" disabled={Object.keys(formErrors).length > 0} />
     </form>
   );
 }
