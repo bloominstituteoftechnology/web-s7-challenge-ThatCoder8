@@ -10,10 +10,12 @@ function App() {
         <NavLink to="/">Home</NavLink>
         <NavLink to="/order">Order</NavLink>
       </nav>
+      <Router>
       <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/order" element={<Form />} />
       </Routes>
+      </Router>
     </div>
   );
 }
