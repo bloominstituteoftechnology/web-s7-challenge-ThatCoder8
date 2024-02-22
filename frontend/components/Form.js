@@ -42,7 +42,7 @@ export default function Form() {
     toppings: '',
   });
 
-  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [formSubmitted, setFormSubmitted] = useState(null)
 
   const handleInputChange = (e) => {
     const {name, value, type, checked} = e.target;
@@ -55,14 +55,9 @@ export default function Form() {
   };
 
   const handleCheckboxChange = (topping) => {
-    const updatedToppings = [...formValues.toppings];
-    const index = updatedToppings.indexOf(topping);
-
-    if (index !== -1) {
-      updatedToppings.splice(index, 1);
-    } else {
-      updatedToppings.push(topping)
-  }
+    const updatedToppings = formValues.toppings.includes(topping)
+    ? formValues.toppings.filter(item => item !== topping)
+    : [...formValues.toppings, topping];
 
 setFormValues({
   ...formValues, 
@@ -77,6 +72,7 @@ setFormValues({
     .then(() => {
       console.log('Form submitted with values:', formValues);
       setFormSubmitted(true);
+      setFormErrors({})
       setFormValues({
         fullName: '',
         size: '',
@@ -85,7 +81,7 @@ setFormValues({
     })
 .catch((err) => {
   const newErrors = {};
-  err.inner.forEach(error => {
+  err.inner.forEach((error) => {
     newErrors[error.path]
  = error.message;  });
  setFormErrors(newErrors);
@@ -95,8 +91,12 @@ setFormValues({
   return (
     <form onSubmit={handleSubmit}>
       <h2>Order Your Pizza</h2>
-      {formSubmitted && Object.keys(formErrors).length === 0 && ( <div className='success'>Thank you for your order!</div>)}
-      {!formSubmitted && <div className='failure'>Something went wrong</div>}
+      {formSubmitted && (
+      <div className='success'>{formValues.toppings.length > 0
+      ? `Thank you for your order, ${formValues.fullName}! Your ${formValues.size.toLowerCase()} pizza with ${formValues.toppings.length} is on the way.`
+      : 'Thank you for your order! Your ${formValues.size.toLowerCase()} with no toppings.'}
+  </div>)}
+      {formSubmitted === false && <div className='failure'>Something went wrong</div>}
 
       <div className="input-group">
         <div>
@@ -123,7 +123,7 @@ setFormValues({
         {toppings.map(topping => (
         <label key={topping.topping_id}>
           <input
-            name="Pepperoni"
+            name={topping.text}
             type="checkbox"
             value={topping.text}
             checked={formValues.toppings.includes(topping.text)}
@@ -134,7 +134,7 @@ setFormValues({
         ))}
         {formErrors.toppings && <div className='error'>{formErrors.toppings}</div>}
       </div>
-      <input type="submit" disabled={Object.keys(formErrors).length > 0} />
+      <input type="submit" />
     </form>
   );
 }
