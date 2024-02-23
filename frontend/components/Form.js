@@ -22,24 +22,23 @@ const toppings = [
 // Validation schema using Yup
 
 const validationSchema = Yup.object({
-  fullName: Yup.string()
+  fullName: Yup.string().trim()
   .min(3, validationErrors.fullNameTooShort)
   .max(20, validationErrors.fullNameTooLong)
   .required('Full name is required'),
-  size: Yup.string().oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect).required('Size is required'),
-  toppings: Yup.array().of(Yup.string()),
+  size: Yup.string().oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect)
 });
 
 export default function Form() {
   const [formValues, setFormValues] = useState({
     fullName: '',
     size: '',
-    toppings: [],
+
+toppings: [
   });
   const [formErrors, setFormErrors] = useState({
     fullName: '',
     size: '',
-    toppings: '',
   });
 
   const [formSubmitted, setFormSubmitted] = useState(null)
@@ -94,7 +93,7 @@ setFormValues({
       {formSubmitted && (
       <div className='success'>{formValues.toppings.length > 0
       ? `Thank you for your order, ${formValues.fullName}! Your ${formValues.size.toLowerCase()} pizza with ${formValues.toppings.length} is on the way.`
-      : 'Thank you for your order! Your ${formValues.size.toLowerCase()} with no toppings.'}
+      :`Thank you for your order! Your ${formValues.size.toLowerCase()} with no toppings.`}
   </div>)}
       {formSubmitted === false && <div className='failure'>Something went wrong</div>}
 
@@ -134,7 +133,7 @@ setFormValues({
         ))}
         {formErrors.toppings && <div className='error'>{formErrors.toppings}</div>}
       </div>
-      <input type="submit" />
+      <input type="submit" disabled={!formValues.fullName || !formValues.size}/>
     </form>
   );
 }
