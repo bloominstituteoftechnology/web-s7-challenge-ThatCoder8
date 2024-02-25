@@ -45,6 +45,7 @@ export default function Form() {
   });
 
   const [formSubmitted, setFormSubmitted] = useState(null)
+  const [successMessage, setSuccessMessage] = useState('')
 
   const handleInputChange = (e) => {
     const {name, value, type, checked} = e.target;
@@ -73,7 +74,10 @@ setFormValues({
     try {
       await validationSchema.validate(formValues, {abortEarly: false})
 
-      const response = await axios.post(apiEndpoint, formValues)
+      const response = await axios.post(apiEndpoint, formValues);
+
+      const successMessageText = response.data.message;
+      setSuccessMessage(successMessageText)
 
       setFormSubmitted(true);
       setFormErrors({})
@@ -87,6 +91,12 @@ setFormValues({
   err.inner.forEach((error) => {
     newErrors[error.path]
  = error.message;  });
+
+ if (err.path === 'toppings') {
+  newErrors['toppings'] = err.errors[0]
+ }
+
+
  setFormErrors(newErrors);
  setFormSubmitted(false);
 }
@@ -95,11 +105,7 @@ setFormValues({
   return (
     <form onSubmit={handleSubmit}>
       <h2>Order Your Pizza</h2>
-      {formSubmitted && (
-      <div className='success'>{formValues.toppings.length > 0
-      ? `Thank you for your order, ${formValues.fullName}! Your ${formValues.size.toLowerCase()} pizza with ${formValues.toppings.length} is on the way.`
-      :`Thank you for your order! Your ${formValues.size.toLowerCase()} with no toppings.`}
-  </div>)}
+      {formSubmitted && <div className='success'>`${successMessage}`</div>}
       {formSubmitted === false && <div className='failure'>Something went wrong</div>}
 
       <div className="input-group">
@@ -141,6 +147,4 @@ setFormValues({
       <input type="submit" disabled={!formValues.fullName || !formValues.size}/>
     </form>
   );
-};
-
-
+}
