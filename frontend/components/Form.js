@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
 import * as Yup from 'yup'
+import axios from 'axios';
+
+const apiEndpoint = 'http://localhost:9009/api/order';
 
 // 👇 Here are the validation errors you will use with Yup.
 const validationErrors = {
@@ -22,23 +25,23 @@ const toppings = [
 // Validation schema using Yup
 
 const validationSchema = Yup.object({
-  fullName: Yup.string().trim()
+  fullName: Yup.string()
   .min(3, validationErrors.fullNameTooShort)
   .max(20, validationErrors.fullNameTooLong)
   .required('Full name is required'),
-  size: Yup.string().oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect)
-});
+  size: Yup.string().oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect)});
 
 export default function Form() {
   const [formValues, setFormValues] = useState({
     fullName: '',
     size: '',
-
-toppings: [
+    toppings: [],
   });
+
   const [formErrors, setFormErrors] = useState({
     fullName: '',
     size: '',
+    toppings: '',
   });
 
   const [formSubmitted, setFormSubmitted] = useState(null)
@@ -64,12 +67,14 @@ setFormValues({
 });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    validationSchema.validate(formValues, {abortEarly: false})
-    .then(() => {
-      console.log('Form submitted with values:', formValues);
+    try {
+      await validationSchema.validate(formValues, {abortEarly: false})
+
+      const response = await axios.post(apiEndpoint, formValues)
+
       setFormSubmitted(true);
       setFormErrors({})
       setFormValues({
@@ -77,15 +82,15 @@ setFormValues({
         size: '',
         toppings: [],
       });
-    })
-.catch((err) => {
+  } catch (err) {
   const newErrors = {};
   err.inner.forEach((error) => {
     newErrors[error.path]
  = error.message;  });
  setFormErrors(newErrors);
-})
-  }
+ setFormSubmitted(false);
+}
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -136,4 +141,6 @@ setFormValues({
       <input type="submit" disabled={!formValues.fullName || !formValues.size}/>
     </form>
   );
-}
+};
+
+
