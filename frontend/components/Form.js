@@ -60,13 +60,8 @@ export default function Form() {
   const handleCheckboxChange = (topping) => {
     const updatedToppings = formValues.toppings.includes(topping)
     ? formValues.toppings.filter(item => item !== topping)
-    : [...formValues.toppings, topping];
+    : [...formValues.toppings, topping];}
 
-setFormValues({
-  ...formValues, 
-  toppings: updatedToppings,
-});
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,9 +70,8 @@ setFormValues({
       await validationSchema.validate(formValues, {abortEarly: false})
 
       const response = await axios.post(apiEndpoint, formValues);
-
-      const successMessageText = response.data.message;
-      setSuccessMessage(successMessageText)
+      
+      setSuccessMessage(response.data.message)
 
       setFormSubmitted(true);
       setFormErrors({})
@@ -86,26 +80,41 @@ setFormValues({
         size: '',
         toppings: [],
       });
-  } catch (err) {
+  } catch(err) {
+
+    if (err.response && err.response.data && err.response.data.errors) {
+  const serverErrors = err.response.data.errors;
   const newErrors = {};
-  err.inner.forEach((error) => {
-    newErrors[error.path]
- = error.message;  });
 
- if (err.path === 'toppings') {
-  newErrors['toppings'] = err.errors[0]
- }
-
+  serverErrors.forEach((error) => {
+const path = error.path === 'fullName' ? 'fullName' : error.path.trim();
+newErrors[path] = error.message;
+  })
 
  setFormErrors(newErrors);
+} else if (err.inner) {
+ const newErrors = {};
+ err.inner.forEach((error) => {
+  newErrors[error.path] = error.message;
+ }); 
+ 
+ if (err.path === 'toppings') {
+  newErrors['toppings'] = err.errors[0];
+}
+
+// Set form errors for other validation issues
+setFormErrors(newErrors);
+}
+ 
  setFormSubmitted(false);
 }
 };
 
+
 return (
   <form onSubmit={handleSubmit}>
     <h2>Order Your Pizza</h2>
-    {formSubmitted && <div className='success'>`${successMessage}`</div>}
+    {formSubmitted && <div className='success'>{successMessage}</div>}
     {formSubmitted === false && <div className='failure'>Something went wrong</div>}
 
       <div className="input-group">
@@ -144,7 +153,6 @@ return (
         ))}
         {formErrors.toppings && <div className='error'>{formErrors.toppings}</div>}
       </div>
-      <input type="submit" disabled={!formValues.fullName || !formValues.size}/>
+      <input type="submit" disabled={!formValues.fullName || !formValues.size} />
     </form>
   );
-  }   
