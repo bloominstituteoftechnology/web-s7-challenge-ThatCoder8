@@ -41,87 +41,72 @@ export default function Form() {
   const [formErrors, setFormErrors] = useState({
     fullName: '',
     size: '',
+    toppings: '',
   });
 
-  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [formSubmitted, setFormSubmitted] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
-  const [failureMessage, setFailureMessage] = useState('')
-
-  useEffect(() => {
-    formSchema.isValid(formValues).then((isValid) => {
-      setFormSubmitted(isValid)
-    })
-  }, [formValues.fullName, formValues.size])
-
-
-  const validate = (key, value) => {
-    validationSchema.validate({[key]:value}).then(() => {
-      setFormErrors({
-        ...formErrors, [key]: ''
-      })
-    }).catch((err) => {setFormErrors({
-      ...formErrors, [key]: err.errors[0]
-    })})
-  };
 
   const handleInputChange = (e) => {
-    const {id, value} = e.target;
-    validate(id, value)
+    const {name, value, type, checked} = e.target;
+    const inputValues = type === 'checkbox' ? checked : value;
+ 
     setFormValues({
-      ...formValues, [id]: value
+      ...formValues,
+     [name]: inputValues
     })
   }
 
+  const handleCheckboxChange = (topping) => {
+    const updatedToppings = formValues.toppings.includes(topping)
+    ? formValues.toppings.filter(item => item !== topping)
+    : [...formValues.toppings, topping];
 
-  const handleCheckboxChange = (e) => {
-    const {name, checked} = e.target
-    const topping_Id = name.toString()
-    if (checked) {
-      setFormValues({
-        ...formValues, toppings: [...formValues.toppings, name]
-
-      })
-    }         else {
-      setFormValues({
-    ...formValues, toppings: formValues.toppings.filter((t) => 
-      t !== name)
-      })
-    }
-  }
-
-
+setFormValues({
+  ...formValues, 
+  toppings: updatedToppings,
+});
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    try {
       await validationSchema.validate(formValues, {abortEarly: false})
 
-     await axios.post(apiEndpoint, formValues)
+      const response = await axios.post(apiEndpoint, formValues);
 
-      .then(response => {
-        const successMessageText = response.data.message;
-        setSuccessMessage(successMessageText)
-  
-        setFormSubmitted(true);
-        setFailureMessage('')
-        setFormValues({
-          fullName: '',
-          size: '',
-          toppings: [],
-        });
-      })
+      const successMessageText = response.data.message;
+      setSuccessMessage(successMessageText)
 
-      .catch (err =>  {
- setFailureMessage(err?.response?.data?.message);
+      setFormSubmitted(true);
+      setFormErrors({})
+      setFormValues({
+        fullName: '',
+        size: '',
+        toppings: [],
+      });
+  } catch (err) {
+  const newErrors = {};
+  err.inner.forEach((error) => {
+    newErrors[error.path]
+ = error.message;  });
+
+ if (err.path === 'toppings') {
+  newErrors['toppings'] = err.errors[0]
+ }
+
+
+ setFormErrors(newErrors);
  setFormSubmitted(false);
-})
-  };
+}
+};
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <h2>Order Your Pizza</h2>
-      {successMessage && <div className='success'>{successMessage}</div>}
-      {formErrors.fullName && <div className='failure'>{formErrors.fullName}</div>}
+return (
+  <form onSubmit={handleSubmit}>
+    <h2>Order Your Pizza</h2>
+    {formSubmitted && <div className='success'>`${successMessage}`</div>}
+    {formSubmitted === false && <div className='failure'>Something went wrong</div>}
 
       <div className="input-group">
         <div>
@@ -145,15 +130,16 @@ export default function Form() {
       </div>
 
       <div className="input-group">
-        {toppings.map(({topping_id, text}) => (
-        <label key={topping_id}>
+        {toppings.map(topping => (
+        <label key={topping.topping_id}>
           <input
-            name={topping_id}
+            name={topping.text}
             type="checkbox"
-            checked={!!formValues.toppings.find(t => t==topping_id)}
-            onChange={handleCheckboxChange}
+            value={topping.text}
+            checked={formValues.toppings.includes(topping.text)}
+            onChange={() => handleCheckboxChange(topping.text)}
           />
-          {text}<br />
+          {topping.text}<br />
         </label>
         ))}
         {formErrors.toppings && <div className='error'>{formErrors.toppings}</div>}
@@ -161,4 +147,4 @@ export default function Form() {
       <input type="submit" disabled={!formValues.fullName || !formValues.size}/>
     </form>
   );
-        }   
+  }   
